@@ -26,8 +26,19 @@ async function pingSupabase(url, anonKey) {
   };
 }
 
+async function fetchWithTimeout(url, options = {}, ms = 12000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal });
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function pingRender(healthUrl) {
-  const res = await fetch(healthUrl, { method: "GET" });
+  // Timeout curto: Netlify function tem limite; cold start do Render pode passar de 50s.
+  const res = await fetchWithTimeout(healthUrl, { method: "GET" }, 12000);
   const text = await res.text();
   return {
     ok: res.ok,
@@ -54,7 +65,8 @@ export async function runWake() {
     })),
   ]);
 
-  const ok = Boolean(supabase.ok && render.ok);
+  // Sucesso do keep-alive = Supabase acordado. Render é best-effort (cold start).
+  const ok = Boolean(supabase.ok);
   return {
     ok,
     at: new Date().toISOString(),
