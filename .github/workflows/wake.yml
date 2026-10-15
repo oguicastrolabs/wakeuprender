@@ -26,13 +26,13 @@ jobs:
           echo "supabase_http=$code_sb"
           head -c 200 /tmp/sb.json || true
           echo
-          echo "==> Render"
+          echo "==> Render (best-effort, 12s)"
           code_rd=$(curl -sS -o /tmp/rd.json -w "%{http_code}" \
-            --max-time 90 "$RENDER_HEALTH_URL" || echo 000)
+            --max-time 12 "$RENDER_HEALTH_URL" || echo 000)
           echo "render_http=$code_rd"
           head -c 200 /tmp/rd.json || true
           echo
-          # Supabase deve responder 2xx; Render pode demorar no cold start
+          # Keep-alive da base = Supabase 2xx. Render é best-effort.
           case "$code_sb" in
             2??) echo "supabase_ok" ;;
             *) echo "supabase_fail"; exit 1 ;;
