@@ -7,22 +7,16 @@ Keep-alive mínimo no Netlify: a cada **14 minutos** a function `wake` pinga:
 
 Repo: [oguicastrolabs/wakeuprender](https://github.com/oguicastrolabs/wakeuprender)
 
-## Env vars no Netlify (Site → Environment)
+## Como roda (zero config no painel)
 
-| Variável | Exemplo |
-|---|---|
-| `SUPABASE_URL` | `https://fhsdxxxeqdixrfqqkjbm.supabase.co` |
-| `SUPABASE_ANON_KEY` | anon key do projeto (não use service_role) |
-| `RENDER_HEALTH_URL` | `https://astro-api-saas.onrender.com/health` (opcional; este é o default) |
+- Defaults (URL + **anon** key) já vão na function e no GitHub Action.
+- Netlify: cron `wake` a cada 14 min + HTTP de teste em `/.netlify/functions/ping`
+- GitHub Actions: workflow `wake` a cada 14 min (backup)
 
-## Ativar
+Env vars no Netlify são opcionais (só se quiser sobrescrever).
 
-1. Netlify → **Add new site** → Import from Git → este repositório (`main`).
-2. Setar as env vars acima.
-3. Deploy production.
-4. **Functions** → `wake` → **Run now** e conferir o JSON (`ok: true`).
-
-O cron só roda em production (não em Deploy Previews).
+Site: https://wakeuprender.netlify.app/  
+Ping: https://wakeuprender.netlify.app/.netlify/functions/ping
 
 ## Front
 

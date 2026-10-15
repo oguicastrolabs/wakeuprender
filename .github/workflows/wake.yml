@@ -1,0 +1,39 @@
+# Backup keep-alive (não depende de env no Netlify).
+name: wake
+
+on:
+  schedule:
+    - cron: "*/14 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase + Render
+        env:
+          SUPABASE_URL: https://fhsdxxxeqdixrfqqkjbm.supabase.co
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZoc2R4eHhlcWRpeHJmcXFramJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5MTEwNzQsImV4cCI6MjEwNDQ4NzA3NH0.9aaEJitQJevy9x8VgT35ob4xnsHFmOh3BnFzihxTBz0
+          RENDER_HEALTH_URL: https://astro-api-saas.onrender.com/health
+        run: |
+          set -e
+          echo "==> Supabase"
+          code_sb=$(curl -sS -o /tmp/sb.json -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/app_config?select=chave&limit=1" || echo 000)
+          echo "supabase_http=$code_sb"
+          head -c 200 /tmp/sb.json || true
+          echo
+          echo "==> Render"
+          code_rd=$(curl -sS -o /tmp/rd.json -w "%{http_code}" \
+            --max-time 90 "$RENDER_HEALTH_URL" || echo 000)
+          echo "render_http=$code_rd"
+          head -c 200 /tmp/rd.json || true
+          echo
+          # Supabase deve responder 2xx; Render pode demorar no cold start
+          case "$code_sb" in
+            2??) echo "supabase_ok" ;;
+            *) echo "supabase_fail"; exit 1 ;;
+          esac
